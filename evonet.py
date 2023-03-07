@@ -25,16 +25,6 @@ class EvoNet(nn.Module):
             nn.init.xavier_uniform_(m.weight, gain)
 
 
-    def init_w_parent(self, parent, beta):
-        gain = nn.init.calculate_gain('relu')
-        gain *= beta
-        for m, pm in zip(self.modules(), parent.modules):
-            fan_in, fan_out = torch.nn.init._calculate_fan_in_and_fan_out(m.weight)
-            std = gain * math.sqrt(2.0 / float(fan_in + fan_out))
-            a = math.sqrt(3.0) * std  # Calculate uniform bounds from standard deviation
-            torch.nn.init._no_grad_uniform_(m.weight, pm.weight - a, pm.weight + a)
-
-
     def forward(self, x):
         # import pdb; pdb.set_trace()
         # Max pooling over a (2, 2) window

@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 import numpy as np
+from tqdm import tqdm
 
 
 from evonet import EvoNet, evo_w
@@ -45,7 +46,7 @@ def test2(models, device, test_loader, train=False):
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
 
-            for mi, model in enumerate(models):
+            for mi, model in enumerate(tqdm(models)):
                 output = model(data)
                 test_loss[mi] += F.cross_entropy(output, target).item()  # sum up batch loss
                 pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
@@ -114,11 +115,11 @@ def main():
     train_loader = torch.utils.data.DataLoader(dataset1, **test_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
 
-    POP = 2000
-    SUR = 200
+    POP = 10000
+    SUR = 400
     models = []
     survivors = []
-    betas = np.linspace(0.05, 0, args.epochs)
+    # betas = np.linspace(0.05, 0, args.epochs)
 
     for epoch in range(1, args.epochs + 1):
         print('\nEpoch: {} / {}'.format(epoch, args.epochs))
@@ -130,7 +131,8 @@ def main():
                 models.append(EvoNet().to(device))
         else:
             models = []
-            beta = max(0.02, betas[epoch - 1])
+            # beta = max(0.02, betas[epoch - 1])
+            beta = 0.035
             print(beta)
             for parent in survivors:
                 for _ in range(int(POP / SUR)):
@@ -155,8 +157,9 @@ def main():
         _ = test2(survivors, device, test_loader, train=False)
 
     if args.save_model:
-        for mi, mm in enumerate(models):
-            torch.save(mm.state_dict(), "mnist_cnn_{}.pt".format(mi))
+        # for mi, mm in enumerate(models):
+        #     torch.save(mm.state_dict(), "mnist_cnn_{}.pt".format(mi))
+        torch.save(survivors[0].state_dict(), "mnist_cnn.pt")
 
 
 if __name__ == '__main__':
